@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/alekLukanen/ChapterhouseDB/elements"
 	"github.com/alekLukanen/ChapterhouseDB/operations"
@@ -14,6 +15,7 @@ import (
 	arrowops "github.com/alekLukanen/arrow-ops"
 	"github.com/alekLukanen/errs"
 	"github.com/apache/arrow/go/v17/arrow"
+	"github.com/apache/arrow/go/v17/arrow/array"
 	"github.com/apache/arrow/go/v17/arrow/memory"
 )
 
@@ -33,6 +35,8 @@ func main() {
 		return
 	}
 
+  go IntsertTupleOnInterval(ctx, logger, tableRegistry, 5 * time.Second)
+
 	warehouse, err := warehouse.NewWarehouse(
 		ctx,
 		logger,
@@ -44,10 +48,10 @@ func main() {
 			KeyPrefix: "chapterhouseDB",
 		},
 		storage.ObjectStorageOptions{
-			Endpoint:     "localhost:9000",
-			Region:       "us-east-1",
-			AuthKey:      "",
-			AuthSecret:   "",
+      Endpoint:     "http://localhost:9090",
+			Region:       "us-west-2",
+			AuthKey:      "key",
+			AuthSecret:   "secret",
 			UsePathStyle: true,
 			AuthType:     storage.ObjectStorageAuthTypeStatic,
 		},
@@ -85,7 +89,7 @@ func BuildTableRegistry(ctx context.Context, logger *slog.Logger) (*operations.T
 			).
 				AddSubscriptions(
 					elements.NewExternalSubscription(
-						"externalTable1",
+						"sourceSystemTable1",
 						Table1Transformer,
 						[]elements.Column{
 							elements.NewColumn("column1", &arrow.Int32Type{}),
@@ -139,4 +143,72 @@ func Table1Transformer(
 	}
 
 	return takenRec, nil
+}
+
+func IntsertTupleOnInterval(
+  ctx context.Context, 
+  logger *slog.Logger, 
+  tableRegistry *operations.TableRegistry, 
+  interval time.Duration) {
+
+  keyStorage, err := storage.NewKeyStorage(
+    ctx, 
+    logger, 
+    storage.KeyStorageOptions{
+      Address: "localhost:6379",
+      Password: "",
+      KeyPrefix: "chapterhouseDB",
+    },
+  )
+  if err != nil {
+    logger.Error("unable to start storage", slog.String("error", errs.ErrorWithStack(err)))
+    return
+  }
+
+  mem := memory.NewGoAllocator()
+  inserter := operations.NewInserter(
+    logger, 
+    tableRegistry,
+    keyStorage, 
+    mem,
+    operations.InserterOptions{
+      PartitionLockDuration: 15 * time.Second,
+    },
+  )
+ 
+  schema := arrow.NewSchema(
+		[]arrow.Field{
+			{Name: "column1", Type: &arrow.Int32Type{}},
+			{Name: "column2", Type: &arrow.BooleanType{}},
+			{Name: "column3", Type: &arrow.Float64Type{}},
+			{Name: "eventName", Type: &arrow.StringType{}},
+		}, nil,
+	)
+	recBuilder := array.NewRecordBuilder(mem, schema)
+	defer recBuilder.Release()
+
+	recBuilder.Field(0).(*array.Int32Builder).AppendValues([]int32{1, 2, 3, 4, 10, 20, 29, 35, 36, 37}, nil)
+	recBuilder.Field(1).(*array.BooleanBuilder).AppendValues([]bool{true, true, true, false, true, false, true, false, true, false}, nil)
+	recBuilder.Field(2).(*array.Float64Builder).AppendValues([]float64{1., 2., 3., 4., 10., 20., 29., 35., 36., 37.}, nil)
+	recBuilder.Field(3).(*array.StringBuilder).AppendValues([]string{"ev1", "ev1", "ev1", "ev1", "ev1", "ev1", "ev2", "ev2", "ev2", "ev2"}, nil)
+
+	rec := recBuilder.NewRecord()
+	defer rec.Release()
+
+  ticker := time.NewTicker(interval)
+  defer ticker.Stop()
+  for {
+    select {
+    case <-ctx.Done():
+      return
+    case <-ticker.C:
+      // Insert Tuple
+      logger.Info("interting tuples")
+      insertErr := inserter.InsertTuples(ctx, "table1", "external.sourceSystemTable1", rec)
+      if insertErr != nil {
+        logger.Error("failed to insert tuple", slog.String("error", errs.ErrorWithStack(insertErr)))
+      }
+    }
+  }
+
 }

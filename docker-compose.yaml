@@ -4,7 +4,6 @@ services:
   
   keydb:
     image: eqalpha/keydb:latest
-    container_name: keydb
     restart: always
     ports:
       - "6379:6379"
