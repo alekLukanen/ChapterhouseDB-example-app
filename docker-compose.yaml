@@ -19,7 +19,7 @@ services:
     environment:
       initialBuckets: default
       root: /data
-      retainFilesOnExit: true
+      retainFilesOnExit: false
 
 volumes:
   keydb-data:
