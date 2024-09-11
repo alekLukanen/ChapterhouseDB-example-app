@@ -77,6 +77,13 @@ func BuildTableRegistry(ctx context.Context, logger *slog.Logger) (*operations.T
 			elements.NewColumn("column2", arrow.FixedWidthTypes.Boolean),
 			elements.NewColumn("column3", arrow.PrimitiveTypes.Float64),
 		).
+    SetOptions(
+      elements.TableOptions{
+        BatchProcessingDelay: 10 * time.Second,
+        BatchProcessingSize:  1000,
+        MaxObjectSize:        250,
+      },
+    ).
 		AddColumnPartitions(
 			elements.NewColumnPartition(
 				"column1",
@@ -177,7 +184,7 @@ func IntsertTupleOnInterval(
 	)
 
 	var i int = 0
-	var width int = 2
+	var width int = 3000
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
