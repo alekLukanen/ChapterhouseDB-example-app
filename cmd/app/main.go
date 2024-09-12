@@ -35,7 +35,7 @@ func main() {
 		return
 	}
 
-	go IntsertTupleOnInterval(ctx, logger, tableRegistry, 10*time.Second)
+	go IntsertTupleOnInterval(ctx, logger, tableRegistry, 1*time.Second)
 
 	warehouse, err := warehouse.NewWarehouse(
 		ctx,
@@ -179,12 +179,12 @@ func IntsertTupleOnInterval(
 		keyStorage,
 		mem,
 		operations.InserterOptions{
-			PartitionLockDuration: 15 * time.Second,
+			PartitionLockDuration: 60 * time.Second,
 		},
 	)
 
 	var i int = 0
-	var width int = 3000
+	var width int = 10_000
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
