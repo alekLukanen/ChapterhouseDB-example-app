@@ -183,8 +183,8 @@ func IntsertTupleOnInterval(
 		},
 	)
 
-	var i int = 0
-	var width int = 10_000
+  i := 0
+  width := 1000
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
