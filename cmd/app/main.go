@@ -11,6 +11,7 @@ import (
 	"github.com/alekLukanen/ChapterhouseDB/operations"
 	"github.com/alekLukanen/ChapterhouseDB/partitionFuncs"
 	"github.com/alekLukanen/ChapterhouseDB/storage"
+	"github.com/alekLukanen/ChapterhouseDB/tasker"
 	"github.com/alekLukanen/ChapterhouseDB/warehouse"
 	arrowops "github.com/alekLukanen/arrow-ops"
 	"github.com/alekLukanen/errs"
@@ -35,7 +36,7 @@ func main() {
 		return
 	}
 
-	go IntsertTupleOnInterval(ctx, logger, tableRegistry, 1*time.Second)
+	// go IntsertTupleOnInterval(ctx, logger, tableRegistry, 1*time.Second)
 
 	warehouse, err := warehouse.NewWarehouse(
 		ctx,
@@ -59,13 +60,22 @@ func main() {
 			BucketName: "default",
 			KeyPrefix:  "chdb",
 		},
+		tasker.Options{
+			KeyDBAddress:  "localhost:6379",
+			KeyDBPassword: "",
+			KeyPrefix:     "chapterhouseDB",
+			TaskTimeout:   1 * time.Minute,
+		},
 	)
 	if err != nil {
-		logger.Error("failed to create warehouse", slog.String("error", errs.ErrorWithStack(err)))
+		logger.Error("failed to create warehouse", slog.String("error", err.Error()))
 		return
 	}
 
-	warehouse.Run(ctx)
+	err = warehouse.Run(ctx)
+	if err != nil {
+		logger.Error("warehouse run loop failed", slog.String("error", err.Error()))
+	}
 
 }
 
@@ -77,13 +87,13 @@ func BuildTableRegistry(ctx context.Context, logger *slog.Logger) (*operations.T
 			elements.NewColumn("column2", arrow.FixedWidthTypes.Boolean),
 			elements.NewColumn("column3", arrow.PrimitiveTypes.Float64),
 		).
-    SetOptions(
-      elements.TableOptions{
-        BatchProcessingDelay: 10 * time.Second,
-        BatchProcessingSize:  1000,
-        MaxObjectSize:        250,
-      },
-    ).
+		SetOptions(
+			elements.TableOptions{
+				BatchProcessingDelay: 5 * time.Second,
+				BatchProcessingSize:  1000,
+				MaxObjectSize:        250,
+			},
+		).
 		AddColumnPartitions(
 			elements.NewColumnPartition(
 				"column1",
@@ -172,19 +182,34 @@ func IntsertTupleOnInterval(
 		return
 	}
 
+	tr, err := operations.BuildTasker(
+		ctx,
+		logger,
+		tasker.Options{
+			KeyDBAddress:  "localhost:6379",
+			KeyDBPassword: "",
+			KeyPrefix:     "chapterhouseDB",
+		},
+	)
+	if err != nil {
+		logger.Error("unable to build the tasker", slog.String("error", errs.ErrorWithStack(err)))
+		return
+	}
+
 	mem := memory.NewGoAllocator()
 	inserter := operations.NewInserter(
 		logger,
 		tableRegistry,
 		keyStorage,
+		tr,
 		mem,
 		operations.InserterOptions{
 			PartitionLockDuration: 60 * time.Second,
 		},
 	)
 
-  i := 0
-  width := 1000
+	i := 0
+	width := 5_000
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
