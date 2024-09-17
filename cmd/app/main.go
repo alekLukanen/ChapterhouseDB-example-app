@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"math/rand/v2"
 	"os"
 	"time"
 
@@ -36,7 +37,7 @@ func main() {
 		return
 	}
 
-	go IntsertTupleOnInterval(ctx, logger, tableRegistry, 1*time.Second)
+	IntsertTupleOnInterval(ctx, logger, tableRegistry, 1*time.Second, 3)
 
 	warehouse, err := warehouse.NewWarehouse(
 		ctx,
@@ -90,8 +91,8 @@ func BuildTableRegistry(ctx context.Context, logger *slog.Logger) (*operations.T
 		SetOptions(
 			elements.TableOptions{
 				BatchProcessingDelay: 5 * time.Second,
-				BatchProcessingSize:  1000,
-				MaxObjectSize:        250,
+				BatchProcessingSize:  5000,
+				MaxObjectSize:        5000,
 			},
 		).
 		AddColumnPartitions(
@@ -158,15 +159,24 @@ func Table1Transformer(
 	if err != nil {
 		return nil, errs.Wrap(err, fmt.Errorf("failed taking columns: %v", columns))
 	}
+	defer takenRec.Release()
 
-	return takenRec, nil
+	// deduplicate the record
+	dedupColumns := []string{"column1"}
+	dedupRec, err := arrowops.DeduplicateRecord(mem, takenRec, dedupColumns, false)
+	if err != nil {
+		return nil, errs.Wrap(err, fmt.Errorf("deduplicating by columns: %v", dedupColumns))
+	}
+
+	return dedupRec, nil
 }
 
 func IntsertTupleOnInterval(
 	ctx context.Context,
 	logger *slog.Logger,
 	tableRegistry *operations.TableRegistry,
-	interval time.Duration) {
+	interval time.Duration,
+	stopAfterNIteration int) {
 
 	keyStorage, err := storage.NewKeyStorage(
 		ctx,
@@ -208,18 +218,21 @@ func IntsertTupleOnInterval(
 		},
 	)
 
+	randSource := rand.NewPCG(64, 1024)
+	randGen := rand.New(randSource)
+
 	i := 0
-	width := 100
+	width := 5000
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
-	for {
+	for iter := 0; iter < stopAfterNIteration; iter++ {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
 			// Insert Tuple
 			logger.Info("interting tuples")
-			rec := BuildRecord(mem, i, width)
+			rec := BuildRecord(mem, i, width, randGen)
 			insertErr := inserter.InsertTuples(ctx, "table1", "external.sourceSystemTable1", rec)
 			if insertErr != nil {
 				logger.Error("failed to insert tuple", slog.String("error", errs.ErrorWithStack(insertErr)))
@@ -233,7 +246,7 @@ func IntsertTupleOnInterval(
 
 }
 
-func BuildRecord(mem *memory.GoAllocator, i, width int) arrow.Record {
+func BuildRecord(mem *memory.GoAllocator, i, width int, randGen *rand.Rand) arrow.Record {
 
 	schema := arrow.NewSchema(
 		[]arrow.Field{
@@ -246,8 +259,20 @@ func BuildRecord(mem *memory.GoAllocator, i, width int) arrow.Record {
 	recBuilder := array.NewRecordBuilder(mem, schema)
 	defer recBuilder.Release()
 
+	genNums := make(map[int]*struct{}, width)
+	genNum := func(maxVal int) int {
+		for {
+			val := randGen.IntN(maxVal)
+			if _, ok := genNums[val]; !ok {
+				genNums[val] = &struct{}{}
+				return val
+			}
+		}
+	}
+
 	for c := i; c < i+width; c++ {
-		recBuilder.Field(0).(*array.Int32Builder).Append(int32(c))
+		recBuilder.Field(0).(*array.Int32Builder).Append(int32(genNum(100000)))
+		// recBuilder.Field(0).(*array.Int32Builder).Append(int32(c))
 		recBuilder.Field(1).(*array.BooleanBuilder).Append(c%2 == 0)
 		recBuilder.Field(2).(*array.Float64Builder).Append(float64(c))
 		recBuilder.Field(3).(*array.StringBuilder).Append(fmt.Sprintf("event%d", c))
