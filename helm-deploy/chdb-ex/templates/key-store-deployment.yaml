@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.namePrefix }}-keydb
+  labels:
+    app: {{ .Values.namePrefix }}-keydb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.namePrefix }}-keydb
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.namePrefix }}-keydb
+    spec:
+      nodeName: {{ .Values.keydb.assignToNode }}
+      containers:
+        - name: keydb
+          image: eqalpha/keydb:latest
+          ports:
+            - containerPort: 6379
+          resources:
+          {{- toYaml .Values.resources | indent 12 }}
+          env:
+            - name: KEYDB_DATABASES
+              value: "4" # Modify if you want a different number of databases
+          volumeMounts:
+            - mountPath: /data
+              name: keydb-data
+      volumes:
+        - name: keydb-data
+          emptyDir: {}  # Use emptyDir or configure persistent storage as needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.namePrefix }}-keydb
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    app: {{ .Values.namePrefix }}-keydb

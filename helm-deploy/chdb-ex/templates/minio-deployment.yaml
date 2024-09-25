@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.namePrefix }}-minio
+  labels:
+    app: {{ .Values.namePrefix }}-minio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.namePrefix }}-minio
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.namePrefix }}-minio
+    spec:
+      nodeName: {{ .Values.minio.assignToNode }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.namePrefix }}-minio
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.minio.storageSize }}
