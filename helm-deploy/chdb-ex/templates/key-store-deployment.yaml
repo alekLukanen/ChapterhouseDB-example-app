@@ -14,14 +14,23 @@ spec:
       labels:
         app: {{ .Values.namePrefix }}-keydb
     spec:
-      nodeName: {{ .Values.keydb.assignToNode }}
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - {{ .Values.preferredStorageHostname }}
       containers:
         - name: keydb
           image: eqalpha/keydb:latest
           ports:
             - containerPort: 6379
           resources:
-          {{- toYaml .Values.resources | indent 12 }}
+{{ toYaml $.Values.keyStore.resources | indent 12 }}
           env:
             - name: KEYDB_DATABASES
               value: "4" # Modify if you want a different number of databases

@@ -1,6 +1,6 @@
 namePrefix: "chdb"
+preferredStorageHostname: pi0
 keyStore:
-  assignToNode: pi0
   resources:
     requests:
       memory: "512Mi"
@@ -11,6 +11,15 @@ keyStore:
       cpu: "1000m"
       ephemeral-storage: "1Gi"
 minio:
-  assignToNode: pi0
-  storageSize: "10Gi"
+  storageSize: "5Gi"
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "1000m"
+      ephemeral-storage: "1Gi"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+      ephemeral-storage: "1Gi"
+
 
