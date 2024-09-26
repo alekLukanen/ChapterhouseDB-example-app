@@ -37,7 +37,7 @@ func main() {
 		return
 	}
 
-	IntsertTupleOnInterval(ctx, logger, tableRegistry, 1*time.Second, 3)
+	// IntsertTupleOnInterval(ctx, logger, tableRegistry, 1*time.Second, 3)
 
 	warehouse, err := warehouse.NewWarehouse(
 		ctx,
@@ -45,12 +45,12 @@ func main() {
 		"warehouse1",
 		tableRegistry,
 		storage.KeyStorageOptions{
-			Address:   "localhost:6379",
+			Address:   "http://pi0:6379",
 			Password:  "",
 			KeyPrefix: "chapterhouseDB",
 		},
 		storage.ObjectStorageOptions{
-			Endpoint:     "http://localhost:9090",
+			Endpoint:     "chdb-minio-api:9000",
 			Region:       "us-west-2",
 			AuthKey:      "key",
 			AuthSecret:   "secret",
@@ -62,7 +62,7 @@ func main() {
 			KeyPrefix:  "chdb",
 		},
 		tasker.Options{
-			KeyDBAddress:  "localhost:6379",
+			KeyDBAddress:  "chdb-keydb:6379",
 			KeyDBPassword: "",
 			KeyPrefix:     "chapterhouseDB",
 			TaskTimeout:   1 * time.Minute,
@@ -182,7 +182,7 @@ func IntsertTupleOnInterval(
 		ctx,
 		logger,
 		storage.KeyStorageOptions{
-			Address:   "localhost:6379",
+			Address:   "http://chdb-keydb:6379",
 			Password:  "",
 			KeyPrefix: "chapterhouseDB",
 		},
@@ -196,7 +196,7 @@ func IntsertTupleOnInterval(
 		ctx,
 		logger,
 		tasker.Options{
-			KeyDBAddress:  "localhost:6379",
+			KeyDBAddress:  "chdb-keydb:6379",
 			KeyDBPassword: "",
 			KeyPrefix:     "chapterhouseDB",
 		},

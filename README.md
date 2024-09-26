@@ -2,6 +2,13 @@
 
 A simple example app that demonstrates how to use ChapterhouseDB.
 
+## View Images in Container Registry
+
+You can view the images in the given registry by using a url like this
+```
+http://pi0:30000/v2/_catalog
+```
+
 ## Querying Local Files With DuckDB
 ```sql
 create secret locals3mock3 (

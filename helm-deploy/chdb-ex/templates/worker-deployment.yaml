@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.namePrefix }}-worker
+  labels:
+    app: {{ .Values.namePrefix }}-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.namePrefix }}-worker
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.namePrefix }}-worker
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - {{ .Values.preferredWorkerHostname }}
+      containers:
+        - name: example-app-worker
+          image: pi0:30000/chdb-ex-worker
+          resources:
+{{ toYaml $.Values.chdbWorker.resources | indent 12 }}
+          env:
+            - name: KEYDB_DATABASES
+              value: "4" # Modify if you want a different number of databases
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp-data
+      volumes:
+        - name: tmp-data
+          emptyDir: {}  # Use emptyDir or configure persistent storage as needed
+

@@ -12,7 +12,7 @@ COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
 COPY . .
-RUN go build -o ./bin/app ./cmd/app/main.go
+RUN GOARCH=arm64 GOOS=linux go build -o ./bin/app ./cmd/app/main.go
 
 RUN rm -f ~/.netrc
 

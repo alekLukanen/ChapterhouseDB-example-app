@@ -14,12 +14,13 @@ k8s_yaml(
 
 print(GITHUB_NETRC)
 
-"""
+""""
 docker_build(
-  "pi0:30000/chdb-ex-app",
+  "pi0:30000/chdb-ex-worker",
   ".",
   dockerfile="Dockerfile",
   build_args={"GITHUB_NETRC": read_file(GITHUB_NETRC)},
 )
 """
+
 
