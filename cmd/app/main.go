@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"math/rand/v2"
@@ -19,6 +20,7 @@ import (
 	"github.com/apache/arrow/go/v17/arrow"
 	"github.com/apache/arrow/go/v17/arrow/array"
 	"github.com/apache/arrow/go/v17/arrow/memory"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 func main() {
@@ -31,13 +33,39 @@ func main() {
 
 	ctx := context.Background()
 
+	// create the test bucket
+	objStorOpts := storage.ObjectStorageOptions{
+		Endpoint:     "http://chdb-minio-api:9000",
+		Region:       "us-west-2",
+		AuthKey:      "minioadmin",
+		AuthSecret:   "minioadmin",
+		UsePathStyle: true,
+		AuthType:     storage.ObjectStorageAuthTypeStatic,
+	}
+	objectStorage, err := storage.NewObjectStorage(ctx, logger, objStorOpts)
+	if err != nil {
+		logger.Error("failed to create object storage struct", slog.String("error", err.Error()))
+		return
+	}
+
+	err = objectStorage.CreateBucket(ctx, "chdb-test-warehouse")
+	if err != nil {
+		var ifErr *types.BucketAlreadyOwnedByYou
+		if errors.As(err, &ifErr) {
+			logger.Info("bucket already exists")
+		} else {
+			logger.Error("failed to create the bucket", slog.String("error", err.Error()))
+			return
+		}
+	}
+
 	tableRegistry, err := BuildTableRegistry(ctx, logger)
 	if err != nil {
 		logger.Error("failed to build table registry", slog.String("error", errs.ErrorWithStack(err)))
 		return
 	}
 
-	// IntsertTupleOnInterval(ctx, logger, tableRegistry, 1*time.Second, 3)
+	go IntsertTupleOnInterval(ctx, logger, tableRegistry, 10*time.Second, 10)
 
 	warehouse, err := warehouse.NewWarehouse(
 		ctx,
@@ -45,20 +73,20 @@ func main() {
 		"warehouse1",
 		tableRegistry,
 		storage.KeyStorageOptions{
-			Address:   "http://pi0:6379",
+			Address:   "chdb-keydb:6379",
 			Password:  "",
 			KeyPrefix: "chapterhouseDB",
 		},
 		storage.ObjectStorageOptions{
-			Endpoint:     "chdb-minio-api:9000",
+			Endpoint:     "http://chdb-minio-api:9000",
 			Region:       "us-west-2",
-			AuthKey:      "key",
-			AuthSecret:   "secret",
+			AuthKey:      "minioadmin",
+			AuthSecret:   "minioadmin",
 			UsePathStyle: true,
 			AuthType:     storage.ObjectStorageAuthTypeStatic,
 		},
 		storage.ManifestStorageOptions{
-			BucketName: "default",
+			BucketName: "chdb-test-warehouse",
 			KeyPrefix:  "chdb",
 		},
 		tasker.Options{
@@ -182,7 +210,7 @@ func IntsertTupleOnInterval(
 		ctx,
 		logger,
 		storage.KeyStorageOptions{
-			Address:   "http://chdb-keydb:6379",
+			Address:   "chdb-keydb:6379",
 			Password:  "",
 			KeyPrefix: "chapterhouseDB",
 		},

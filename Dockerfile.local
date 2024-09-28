@@ -1,0 +1,7 @@
+FROM alpine:latest
+
+COPY ./bin/app ./app
+RUN chmod +x ./app
+
+CMD [ "./app" ]
+

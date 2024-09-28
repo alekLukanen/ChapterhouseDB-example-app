@@ -1,5 +1,5 @@
 
-GITHUB_NETRC = "/home/alek/.netrc"
+# GITHUB_NETRC = "/home/alek/.netrc"
 
 default_registry('pi0:30000')
 allow_k8s_contexts('default')
@@ -12,15 +12,17 @@ k8s_yaml(
   )
 )
 
-print(GITHUB_NETRC)
+local_resource(
+  'go-build',
+  'GOARCH=arm64 GOOS=linux go build -o ./bin/app ./cmd/app/main.go',
+  deps=['./cmd/app/main.go'],
+)
 
-""""
 docker_build(
   "pi0:30000/chdb-ex-worker",
   ".",
-  dockerfile="Dockerfile",
-  build_args={"GITHUB_NETRC": read_file(GITHUB_NETRC)},
+  dockerfile="Dockerfile.local",
+  only=["./bin"],
+  # build_args={"GITHUB_NETRC": read_file(GITHUB_NETRC)},
 )
-"""
-
 

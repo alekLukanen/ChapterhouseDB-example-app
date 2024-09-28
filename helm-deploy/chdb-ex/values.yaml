@@ -25,11 +25,11 @@ minio:
 chdbWorker:
   resources:
     requests:
-      memory: "2Gi"
+      memory: "1Gi"
       cpu: "1000m"
       ephemeral-storage: "2Gi"
     limits:
-      memory: "2Gi"
+      memory: "1Gi"
       cpu: "1024m"
       ephemeral-storage: "2Gi"
 

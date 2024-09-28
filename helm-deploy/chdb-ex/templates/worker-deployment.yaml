@@ -5,7 +5,7 @@ metadata:
   labels:
     app: {{ .Values.namePrefix }}-worker
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: {{ .Values.namePrefix }}-worker
