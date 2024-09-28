@@ -23,7 +23,7 @@ spec:
                   - key: kubernetes.io/hostname
                     operator: In
                     values:
-                      - {{ .Values.preferredStorageHostname }}
+                      - {{ .Values.keyStore.preferredHostname }}
       containers:
         - name: keydb
           image: eqalpha/keydb:latest

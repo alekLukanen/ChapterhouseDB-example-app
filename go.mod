@@ -7,6 +7,7 @@ require (
 	github.com/alekLukanen/arrow-ops v0.1.4
 	github.com/alekLukanen/errs v1.0.4
 	github.com/apache/arrow/go/v17 v17.0.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.56.1
 )
 
 require (
@@ -27,7 +28,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.56.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.21.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.25.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.29.1 // indirect

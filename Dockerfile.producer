@@ -1,0 +1,7 @@
+FROM alpine:latest
+
+COPY ./bin/worker ./worker
+RUN chmod +x ./worker
+
+CMD [ "./worker" ]
+

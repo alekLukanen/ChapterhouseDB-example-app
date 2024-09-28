@@ -23,7 +23,7 @@ spec:
                   - key: kubernetes.io/hostname
                     operator: In
                     values:
-                      - {{ .Values.preferredStorageHostname }}
+                      - {{ .Values.minio.preferredHostname }}
       containers:
         - name: minio
           image: minio/minio:latest

@@ -1,7 +1,6 @@
 namePrefix: "chdb"
-preferredStorageHostname: pi0
-preferredWorkerHostname: pi1
 keyStore:
+  preferredHostname: pi0
   resources:
     requests:
       memory: "512Mi"
@@ -12,6 +11,7 @@ keyStore:
       cpu: "1000m"
       ephemeral-storage: "1Gi"
 minio:
+  preferredHostname: pi0
   storageSize: "5Gi"
   resources:
     requests:
@@ -23,6 +23,7 @@ minio:
       cpu: "1000m"
       ephemeral-storage: "1Gi"
 chdbWorker:
+  preferredHostname: pi1
   resources:
     requests:
       memory: "1Gi"
@@ -30,6 +31,17 @@ chdbWorker:
       ephemeral-storage: "2Gi"
     limits:
       memory: "1Gi"
-      cpu: "1024m"
+      cpu: "1000m"
       ephemeral-storage: "2Gi"
+chdbProducer:
+  preferredHostname: pi0
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+      ephemeral-storage: "1Gi"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+      ephemeral-storage: "1Gi"
 
