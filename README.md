@@ -13,14 +13,24 @@ http://pi0:30000/v2/_catalog
 ```sql
 create secret locals3mock3 (
   TYPE S3,
-  KEY_ID "key",
-  SECRET "secret",
-  ENDPOINT "localhost:9090",
+  KEY_ID "minioadmin",
+  SECRET "minioadmin",
+  ENDPOINT "pi0:30006",
   URL_STYLE "path",
   USE_SSL false
 );
 
-select * from 's3://default/chdb/table-state/part-data/table1/0/d_2_0.parquet';
+select * from 's3://chdb-test-warehouse/chdb/table-state/part-data/table1/0/d_2_0.parquet';
+```
+
+Validate that there aren't any duplicates
+```
+select column1, count(*) num_items from 's3://chdb-test-warehouse/chdb/table-state/part-data/table1/*/*.parquet' group by column1 having count(*) > 1 order by column1;
+```
+
+Summary statistics
+```
+select count(*) count, sum(column1) sum, max(column1) max, min(column1) min from 's3://chdb-test-warehouse/chdb/table-state/part-data/table1/*/*.parquet';
 ```
 
 ## List Files in S3Mock

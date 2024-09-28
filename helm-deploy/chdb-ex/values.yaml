@@ -24,10 +24,11 @@ minio:
       ephemeral-storage: "1Gi"
 chdbWorker:
   preferredHostname: pi1
+  replicas: 4
   resources:
     requests:
       memory: "1Gi"
-      cpu: "1000m"
+      cpu: "800m"
       ephemeral-storage: "2Gi"
     limits:
       memory: "1Gi"

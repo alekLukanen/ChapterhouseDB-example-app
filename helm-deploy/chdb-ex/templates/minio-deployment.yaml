@@ -49,10 +49,11 @@ kind: Service
 metadata:
   name: {{ .Values.namePrefix }}-minio-api
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - port: 9000
       targetPort: 9000
+      nodePort: 30006
   selector:
     app: {{ .Values.namePrefix }}-minio
 ---

@@ -34,8 +34,12 @@ func main() {
 		return
 	}
 
-	IntsertTupleOnInterval(ctx, logger, tableRegistry, 10*time.Second, 10, 100_000)
+	IntsertTupleOnInterval(ctx, logger, tableRegistry, 1*time.Second, 30, 100_000)
 
+	for {
+		logger.Info("done writing data to the db; waiting forever...")
+		time.Sleep(5 * time.Second)
+	}
 }
 
 func IntsertTupleOnInterval(

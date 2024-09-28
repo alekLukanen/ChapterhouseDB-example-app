@@ -23,7 +23,7 @@ docker_build(
   "pi0:30000/chdb-ex-worker",
   ".",
   dockerfile="Dockerfile.worker",
-  only=["./bin/worker"],
+  only=["./bin"],
   # build_args={"GITHUB_NETRC": read_file(GITHUB_NETRC)},
 )
 ###################################
@@ -38,7 +38,7 @@ docker_build(
   "pi0:30000/chdb-ex-producer",
   ".",
   dockerfile="Dockerfile.producer",
-  only=["./bin/producer"],
+  only=["./bin"],
   # build_args={"GITHUB_NETRC": read_file(GITHUB_NETRC)},
 )
 ###################################

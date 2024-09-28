@@ -1,7 +1,7 @@
 FROM alpine:latest
 
-COPY ./bin/worker ./worker
-RUN chmod +x ./worker
+COPY ./bin/producer ./producer
+RUN chmod +x ./producer
 
-CMD [ "./worker" ]
+CMD [ "./producer" ]
 

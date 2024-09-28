@@ -23,7 +23,7 @@ func BuildTable1() *elements.Table {
 		).
 		SetOptions(
 			elements.TableOptions{
-				BatchProcessingDelay: 1 * time.Second,
+				BatchProcessingDelay: 10 * time.Second,
 				BatchProcessingSize:  5000,
 				MaxObjectSize:        10_000,
 			},
