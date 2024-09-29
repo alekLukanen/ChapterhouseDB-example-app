@@ -24,7 +24,7 @@ minio:
       ephemeral-storage: "1Gi"
 chdbWorker:
   preferredHostname: pi1
-  replicas: 4
+  replicas: 2
   resources:
     requests:
       memory: "1Gi"
@@ -43,6 +43,17 @@ chdbProducer:
       ephemeral-storage: "1Gi"
     limits:
       memory: "256Mi"
+      cpu: "250m"
+      ephemeral-storage: "1Gi"
+chdbValidator:
+  preferredHostname: pi0
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "250m"
+      ephemeral-storage: "1Gi"
+    limits:
+      memory: "128Mi"
       cpu: "250m"
       ephemeral-storage: "1Gi"
 

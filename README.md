@@ -24,12 +24,12 @@ select * from 's3://chdb-test-warehouse/chdb/table-state/part-data/table1/0/d_2_
 ```
 
 Validate that there aren't any duplicates
-```
+```sql
 select column1, count(*) num_items from 's3://chdb-test-warehouse/chdb/table-state/part-data/table1/*/*.parquet' group by column1 having count(*) > 1 order by column1;
 ```
 
 Summary statistics
-```
+```sql
 select count(*) count, sum(column1) sum, max(column1) max, min(column1) min from 's3://chdb-test-warehouse/chdb/table-state/part-data/table1/*/*.parquet';
 ```
 

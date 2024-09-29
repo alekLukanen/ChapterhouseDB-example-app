@@ -43,3 +43,19 @@ docker_build(
 )
 ###################################
 
+# build the validator #############
+local_resource(
+  'go-validator-build',
+  'GOARCH=arm64 GOOS=linux go build -o ./bin/validator ./cmd/validator/main.go',
+  deps=['./cmd/validator/main.go'],
+)
+docker_build(
+  "pi0:30000/chdb-ex-validator",
+  ".",
+  dockerfile="Dockerfile.validator",
+  only=["./bin"],
+  # build_args={"GITHUB_NETRC": read_file(GITHUB_NETRC)},
+)
+###################################
+
+
