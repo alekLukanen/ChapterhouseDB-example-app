@@ -30,32 +30,16 @@ docker_build(
 
 # build the producer ##############
 local_resource(
-  'go-producer-build',
-  'GOARCH=arm64 GOOS=linux go build -o ./bin/producer ./cmd/producer/main.go',
-  deps=['./cmd/producer/main.go'],
+  'go-tester-build',
+  'CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ GOARCH=arm64 GOOS=linux go build -o ./bin/tester ./cmd/tester/main.go',
+  deps=['./cmd/tester/main.go'],
 )
 docker_build(
-  "pi0:30000/chdb-ex-producer",
+  "pi0:30000/chdb-ex-tester",
   ".",
-  dockerfile="Dockerfile.producer",
+  dockerfile="Dockerfile.tester",
   only=["./bin"],
   # build_args={"GITHUB_NETRC": read_file(GITHUB_NETRC)},
 )
 ###################################
-
-# build the validator #############
-local_resource(
-  'go-validator-build',
-  'GOARCH=arm64 GOOS=linux go build -o ./bin/validator ./cmd/validator/main.go',
-  deps=['./cmd/validator/main.go'],
-)
-docker_build(
-  "pi0:30000/chdb-ex-validator",
-  ".",
-  dockerfile="Dockerfile.validator",
-  only=["./bin"],
-  # build_args={"GITHUB_NETRC": read_file(GITHUB_NETRC)},
-)
-###################################
-
 

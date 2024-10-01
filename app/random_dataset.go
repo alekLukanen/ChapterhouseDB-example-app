@@ -32,11 +32,16 @@ func NewRandomDataset(rowsPerRecord, maxIdValue, maxIterations int) *RandomDatas
 }
 
 func NewMediumRandomDataset() *RandomDataset {
-	return NewRandomDataset(1000, 100_000, 30)
+	return NewRandomDataset(1000, 100_000, 3)
 }
 
 func (obj *RandomDataset) Done() bool {
 	return obj.iterationsCompleted >= obj.maxIterations
+}
+
+func (obj *RandomDataset) Reset() {
+	obj.idx = 0
+	obj.iterationsCompleted = 0
 }
 
 func (obj *RandomDataset) BuildRecord(mem *memory.GoAllocator) arrow.Record {

@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.namePrefix }}-producer
+  name: {{ .Values.namePrefix }}-tester
   labels:
-    app: {{ .Values.namePrefix }}-producer
+    app: {{ .Values.namePrefix }}-tester
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Values.namePrefix }}-producer
+      app: {{ .Values.namePrefix }}-tester
   template:
     metadata:
       labels:
-        app: {{ .Values.namePrefix }}-producer
+        app: {{ .Values.namePrefix }}-tester
     spec:
       affinity:
         nodeAffinity:
@@ -23,12 +23,12 @@ spec:
                   - key: kubernetes.io/hostname
                     operator: In
                     values:
-                      - {{ .Values.chdbProducer.preferredHostname }}
+                      - {{ .Values.chdbTester.preferredHostname }}
       containers:
-        - name: chdb-ex-producer
-          image: pi0:30000/chdb-ex-producer
+        - name: chdb-ex-tester
+          image: pi0:30000/chdb-ex-tester 
           resources:
-{{ toYaml $.Values.chdbProducer.resources | indent 12 }}
+{{ toYaml $.Values.chdbTester.resources | indent 12 }}
           volumeMounts:
             - mountPath: /tmp
               name: tmp-data

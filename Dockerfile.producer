@@ -1,7 +1,0 @@
-FROM alpine:latest
-
-COPY ./bin/producer ./producer
-RUN chmod +x ./producer
-
-CMD [ "./producer" ]
-

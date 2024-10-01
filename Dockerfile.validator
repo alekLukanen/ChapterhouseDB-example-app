@@ -1,7 +1,0 @@
-FROM alpine:latest
-
-COPY ./bin/validator ./validator
-RUN chmod +x ./validator
-
-CMD [ "./validator" ]
-

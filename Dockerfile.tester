@@ -1,0 +1,7 @@
+FROM alpine:latest
+
+COPY ./bin/tester ./tester
+RUN chmod +x ./tester
+
+CMD [ "./tester" ]
+

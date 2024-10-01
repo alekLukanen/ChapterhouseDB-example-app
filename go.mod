@@ -8,6 +8,8 @@ require (
 	github.com/alekLukanen/errs v1.0.4
 	github.com/apache/arrow/go/v17 v17.0.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.56.1
+	github.com/jmoiron/sqlx v1.4.0
+	github.com/marcboeker/go-duckdb v1.8.0
 )
 
 require (
@@ -47,6 +49,7 @@ require (
 	github.com/linkedin/goavro/v2 v2.13.0 // indirect
 	github.com/minio/asm2plan9s v0.0.0-20200509001527-cdd76441f9d8 // indirect
 	github.com/minio/c2goasm v0.0.0-20190812172519-36a3d3bbc4f3 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/redis/go-redis/v9 v9.5.1 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect

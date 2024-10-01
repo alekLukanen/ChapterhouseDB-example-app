@@ -34,7 +34,7 @@ chdbWorker:
       memory: "1Gi"
       cpu: "1000m"
       ephemeral-storage: "2Gi"
-chdbProducer:
+chdbTester:
   preferredHostname: pi0
   resources:
     requests:
@@ -45,15 +45,3 @@ chdbProducer:
       memory: "256Mi"
       cpu: "250m"
       ephemeral-storage: "1Gi"
-chdbValidator:
-  preferredHostname: pi0
-  resources:
-    requests:
-      memory: "128Mi"
-      cpu: "250m"
-      ephemeral-storage: "1Gi"
-    limits:
-      memory: "128Mi"
-      cpu: "250m"
-      ephemeral-storage: "1Gi"
-
