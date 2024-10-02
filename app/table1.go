@@ -23,7 +23,7 @@ func BuildTable1() *elements.Table {
 		).
 		SetOptions(
 			elements.TableOptions{
-				BatchProcessingDelay: 10 * time.Second,
+				BatchProcessingDelay: 1 * time.Second,
 				BatchProcessingSize:  5000,
 				MaxObjectSize:        10_000,
 			},
@@ -47,6 +47,7 @@ func BuildTable1() *elements.Table {
 							elements.NewColumn("column2", &arrow.BooleanType{}),
 							elements.NewColumn("column3", &arrow.Float64Type{}),
 							elements.NewColumn("eventName", &arrow.StringType{}),
+							elements.NewColumn("sampleId", &arrow.Int32Type{}),
 						},
 					),
 				),

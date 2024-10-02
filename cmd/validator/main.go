@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"time"
+	"path/filepath"
 
 	"github.com/alekLukanen/ChapterhouseDB-example-app/app"
+	arrowops "github.com/alekLukanen/arrow-ops"
+	"github.com/apache/arrow/go/v17/arrow/memory"
 )
 
 func main() {
@@ -17,38 +19,25 @@ func main() {
 		&slog.HandlerOptions{Level: slog.LevelDebug},
 	))
 	logger.Info("Running ChapterhouseDB Example App")
-
 	ctx := context.Background()
 
-	warehouse, err := app.BuildWarehouse(ctx, logger)
-	if err != nil {
-		logger.Error("warehouse creation failed", slog.String("error", err.Error()))
-		return
+	dataset := app.NewMediumRandomDataset()
+
+	// write all of the test data to a temporary directory
+	mem := memory.NewGoAllocator()
+	idx := 0
+	for !dataset.Done() {
+		fp := filepath.Join("./dDir", fmt.Sprintf("d%d.parquet", idx))
+		rec := dataset.BuildRecord(mem)
+
+		forErr := arrowops.WriteRecordToParquetFile(ctx, mem, rec, fp)
+		if forErr != nil {
+			rec.Release()
+			fmt.Println(forErr)
+			return
+		}
+		rec.Release()
+		idx++
 	}
-
-	producerStarted := false
-	itersEmpty := 0
-	for {
-		ln, err := warehouse.Tasker.QueueLength(ctx, "tuple-processing")
-		if err != nil {
-			logger.Error("unable to get the length of the tuple processing queue", slog.String("error", err.Error()))
-		} else {
-			logger.Info(fmt.Sprintf("tuple-processing queue length: %d", ln))
-		}
-
-		if ln > 0 {
-			producerStarted = true
-		}
-		if producerStarted && ln == 0 {
-			itersEmpty++
-		}
-		if itersEmpty == 3 {
-			logger.Info("the producer has stopped producing data; breaking out of wait loop")
-			break
-		}
-		time.Sleep(1 * time.Second)
-	}
-
-	logger.Info("validating the data consumed by the workers")
 
 }

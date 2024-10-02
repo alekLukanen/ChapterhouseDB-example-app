@@ -12,7 +12,7 @@ func main() {
 
 	logger := slog.New(slog.NewJSONHandler(
 		os.Stdout,
-		&slog.HandlerOptions{Level: slog.LevelDebug},
+		&slog.HandlerOptions{Level: slog.LevelInfo},
 	))
 	logger.Info("Running ChapterhouseDB Example App")
 

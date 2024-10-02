@@ -7,6 +7,5 @@ import (
 
 type Dataset interface {
 	Done() bool
-	Reset()
 	BuildRecord(mem *memory.GoAllocator) arrow.Record
 }

@@ -22,7 +22,12 @@ import (
 )
 
 type DBValidationResp struct {
-	Valid bool `db:"valid"`
+	IsValid bool `db:"is_valid"`
+}
+
+type DBValidationMismatchResp struct {
+	IsValid       bool `db:"is_valid"`
+	MismatchCount int  `db:"mismatch_count"`
 }
 
 func main() {
@@ -50,7 +55,7 @@ func main() {
 		dataset,
 	)
 
-	dataset.Reset()
+	dataset = app.NewMediumRandomDataset()
 	err = ValidateData(ctx, logger, dataset)
 	if err != nil {
 		logger.Error("data validation failed", slog.String("error", err.Error()))
@@ -115,6 +120,7 @@ func ValidateData(ctx context.Context, logger *slog.Logger, dataset app.Dataset)
 			return forErr
 		}
 		rec.Release()
+		idx++
 	}
 	defer os.RemoveAll(tmpDir)
 
@@ -126,6 +132,8 @@ func ValidateData(ctx context.Context, logger *slog.Logger, dataset app.Dataset)
 
 	// register the s3 credentials
 	_, err = db.Exec(`
+  INSTALL httpfs;
+  LOAD httpfs;
   create secret locals3mock3 (
     TYPE S3,
     KEY_ID "minioadmin",
@@ -141,10 +149,14 @@ func ValidateData(ctx context.Context, logger *slog.Logger, dataset app.Dataset)
 	xdb := sqlx.NewDb(db, "duckdb")
 	defer xdb.Close()
 
+	// basic validation for duplicated data
+	// since column1 is the primary key on the table
+	// we should never have more than one row
+	// for each value in column1
 	var dbResp DBValidationResp
-	err = xdb.Select(
+	err = xdb.Get(
 		&dbResp,
-		`select !exists(column1) valid from(
+		`select count(column1) = 0 as is_valid from(
       select column1 from 's3://chdb-test-warehouse/chdb/table-state/part-data/table1/*/*.parquet' 
       group by column1 
       having count(*) > 1 
@@ -154,6 +166,46 @@ func ValidateData(ctx context.Context, logger *slog.Logger, dataset app.Dataset)
 	)
 	if err != nil {
 		return err
+	}
+	if !dbResp.IsValid {
+		return fmt.Errorf("one or more ids in column1 have been duplicated")
+	}
+
+	dataPattern := fmt.Sprintf("%s/*.parquet", tmpDir)
+
+	query := `
+WITH 
+  window_func_rows AS (
+    SELECT 
+      *,
+      row_number() OVER (PARTITION BY column1 ORDER BY sampleId DESC) AS row_num
+    FROM read_parquet('%s')
+  ),
+  mismatched_rows AS (
+    SELECT t1.column1, t1.column2, t1.column3, t2.column2 AS t2_column2, t2.column3 AS t2_column3
+    FROM read_parquet('s3://chdb-test-warehouse/chdb/table-state/part-data/table1/*/*.parquet') t1
+    LEFT JOIN (
+        SELECT
+            column1, column2, column3
+        FROM window_func_rows subquery
+        WHERE row_num = 1
+    ) t2 ON t1.column1 = t2.column1
+    WHERE t2.column1 IS NULL
+          OR t1.column2 != t2.column2 
+          OR t1.column3 != t2.column3
+    )
+SELECT COUNT(*) = 0 AS is_valid, COUNT(*) AS mismatch_count
+FROM mismatched_rows;
+`
+	query = fmt.Sprintf(query, dataPattern)
+
+	var dbMismatchResp DBValidationMismatchResp
+	err = xdb.Get(&dbMismatchResp, query)
+	if err != nil {
+		return err
+	}
+	if !dbMismatchResp.IsValid {
+		return fmt.Errorf("the dataset in object storage has %d rows that do not match the expected data", dbMismatchResp.MismatchCount)
 	}
 
 	return nil

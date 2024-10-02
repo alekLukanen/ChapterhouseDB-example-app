@@ -1,7 +1,12 @@
-FROM alpine:latest
+FROM debian:latest
 
-COPY ./bin/tester ./tester
-RUN chmod +x ./tester
+# Install any necessary libraries if they aren't included by default
+RUN apt-get update && apt-get install -y \
+    libstdc++6 \
+    libgcc1 \
+    libc6
 
-CMD [ "./tester" ]
+COPY ./bin/tester ./app
+RUN chmod +x ./app
 
+CMD [ "./app" ]
