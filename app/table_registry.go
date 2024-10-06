@@ -14,7 +14,7 @@ func BuildTableRegistry(ctx context.Context, logger *slog.Logger) (*operations.T
 
 	// add all tables here
 	tables := []*elements.Table{
-		BuildTable1(),
+		BuildTable1(), BuildTable2(),
 	}
 
 	err := tableRegistry.AddTables(tables...)
@@ -24,7 +24,6 @@ func BuildTableRegistry(ctx context.Context, logger *slog.Logger) (*operations.T
 
 	// validate that the tables exists in the registery
 	for _, tbl := range tableRegistry.Tables() {
-		logger.Info("table", slog.Any("table1", tbl))
 		logger.Info("table.TableName()", slog.String("TableName", tbl.TableName()))
 		logger.Info("table.Options()", slog.Any("Options", tbl.Options()))
 	}

@@ -46,17 +46,39 @@ func main() {
 		return
 	}
 
-	dataset := app.NewMediumRandomDataset()
+	table1Dataset := app.NewMediumRandomTable1Dataset()
 	IntsertTupleOnInterval(
 		ctx,
 		logger,
 		tableRegistry,
 		1*time.Second,
-		dataset,
+		table1Dataset,
+		"table1",
 	)
 
-	dataset = app.NewMediumRandomDataset()
-	err = ValidateData(ctx, logger, dataset)
+	logger.Info("waiting for data to finish processing...")
+	time.Sleep(10 * time.Second)
+
+	table2Dataset := app.NewMediumRandomTable2Dataset()
+	IntsertTupleOnInterval(
+		ctx,
+		logger,
+		tableRegistry,
+		1*time.Second,
+		table2Dataset,
+		"table2",
+	)
+
+	table1Dataset = app.NewMediumRandomTable1Dataset()
+	err = ValidateData(ctx, logger, table1Dataset, "table1")
+	if err != nil {
+		logger.Error("data validation failed", slog.String("error", err.Error()))
+	} else {
+		logger.Info("the data was properly written to the warehouse")
+	}
+
+	table2Dataset = app.NewMediumRandomTable2Dataset()
+	err = ValidateData(ctx, logger, table2Dataset, "table2")
 	if err != nil {
 		logger.Error("data validation failed", slog.String("error", err.Error()))
 	} else {
@@ -69,7 +91,7 @@ func main() {
 	}
 }
 
-func ValidateData(ctx context.Context, logger *slog.Logger, dataset app.Dataset) error {
+func ValidateData(ctx context.Context, logger *slog.Logger, dataset app.Dataset, tableName string) error {
 
 	logger.Info("waiting for the data to finish processing......")
 
@@ -100,7 +122,7 @@ func ValidateData(ctx context.Context, logger *slog.Logger, dataset app.Dataset)
 	}
 
 	time.Sleep(3 * time.Second)
-	logger.Info("validating the data consumed by the workers")
+	logger.Info(fmt.Sprintf("validating the data consumed by the workers for table %s", tableName))
 
 	tmpDir, err := os.MkdirTemp("", "ValidateData")
 	if err != nil {
@@ -153,17 +175,15 @@ func ValidateData(ctx context.Context, logger *slog.Logger, dataset app.Dataset)
 	// since column1 is the primary key on the table
 	// we should never have more than one row
 	// for each value in column1
-	var dbResp DBValidationResp
-	err = xdb.Get(
-		&dbResp,
-		`select count(column1) = 0 as is_valid from(
-      select column1 from 's3://chdb-test-warehouse/chdb/table-state/part-data/table1/*/*.parquet' 
+	query := `select count(column1) = 0 as is_valid from(
+      select column1 from 's3://chdb-test-warehouse/chdb/table-state/part-data/%s/*/*.parquet' 
       group by column1 
       having count(*) > 1 
       order by column1
-    );
-    `,
-	)
+    );`
+	query = fmt.Sprintf(query, tableName)
+	var dbResp DBValidationResp
+	err = xdb.Get(&dbResp, query)
 	if err != nil {
 		return err
 	}
@@ -173,7 +193,7 @@ func ValidateData(ctx context.Context, logger *slog.Logger, dataset app.Dataset)
 
 	dataPattern := fmt.Sprintf("%s/*.parquet", tmpDir)
 
-	query := `
+	query = `
 WITH 
   window_func_rows AS (
     SELECT 
@@ -183,7 +203,7 @@ WITH
   ),
   mismatched_rows AS (
     SELECT t1.column1, t1.column2, t1.column3, t2.column2 AS t2_column2, t2.column3 AS t2_column3
-    FROM read_parquet('s3://chdb-test-warehouse/chdb/table-state/part-data/table1/*/*.parquet') t1
+    FROM read_parquet('s3://chdb-test-warehouse/chdb/table-state/part-data/%s/*/*.parquet') t1
     LEFT JOIN (
         SELECT
             column1, column2, column3
@@ -197,7 +217,7 @@ WITH
 SELECT COUNT(*) = 0 AS is_valid, COUNT(*) AS mismatch_count
 FROM mismatched_rows;
 `
-	query = fmt.Sprintf(query, dataPattern)
+	query = fmt.Sprintf(query, dataPattern, tableName)
 
 	var dbMismatchResp DBValidationMismatchResp
 	err = xdb.Get(&dbMismatchResp, query)
@@ -218,6 +238,7 @@ func IntsertTupleOnInterval(
 	tableRegistry *operations.TableRegistry,
 	interval time.Duration,
 	dataset app.Dataset,
+	tableName string,
 ) {
 
 	keyStorage, err := storage.NewKeyStorage(
@@ -245,7 +266,7 @@ func IntsertTupleOnInterval(
 		},
 	)
 	if err != nil {
-		logger.Error("unable to build the tasker", slog.String("error", errs.ErrorWithStack(err)))
+		logger.Error("unable to build the tasker", slog.String("error", err.Error()))
 		return
 	}
 
@@ -261,6 +282,13 @@ func IntsertTupleOnInterval(
 		},
 	)
 
+	table, err := tableRegistry.GetTable(tableName)
+	if err != nil {
+		logger.Error("unable to find table in registry", slog.String("error", err.Error()))
+		return
+	}
+	sub := table.SubscriptionGroups()[0].Subscriptions()[0]
+
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for !dataset.Done() {
@@ -271,9 +299,9 @@ func IntsertTupleOnInterval(
 			// Insert Tuple
 			logger.Info("interting tuples")
 			rec := dataset.BuildRecord(mem)
-			insertErr := inserter.InsertTuples(ctx, "table1", "external.sourceSystemTable1", rec)
+			insertErr := inserter.InsertTuples(ctx, table.TableName(), sub.SourceName(), rec)
 			if insertErr != nil {
-				logger.Error("failed to insert tuple", slog.String("error", errs.ErrorWithStack(insertErr)))
+				logger.Error("failed to insert tuple", slog.String("error", insertErr.Error()))
 			}
 			// prepare for next iteration
 			rec.Release()

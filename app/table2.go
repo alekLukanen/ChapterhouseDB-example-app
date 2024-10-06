@@ -14,10 +14,10 @@ import (
 	"github.com/apache/arrow/go/v17/arrow/memory"
 )
 
-func BuildTable1() *elements.Table {
-	table1 := elements.NewTable("table1").
+func BuildTable2() *elements.Table {
+	table1 := elements.NewTable("table2").
 		AddColumns(
-			elements.NewColumn("column1", arrow.PrimitiveTypes.Int32),
+			elements.NewColumn("column1", arrow.BinaryTypes.String),
 			elements.NewColumn("column2", arrow.FixedWidthTypes.Boolean),
 			elements.NewColumn("column3", arrow.PrimitiveTypes.Float64),
 		).
@@ -31,7 +31,7 @@ func BuildTable1() *elements.Table {
 		AddColumnPartitions(
 			elements.NewColumnPartition(
 				"column1",
-				partitionFuncs.NewIntegerRangePartitionOptions(1000),
+				partitionFuncs.NewStringHashPartitionOptions(10, partitionFuncs.MethodFNVHash),
 			),
 		).
 		AddSubscriptionGroups(
@@ -40,10 +40,10 @@ func BuildTable1() *elements.Table {
 			).
 				AddSubscriptions(
 					elements.NewExternalSubscription(
-						"sourceSystemTable1",
+						"sourceSystemTable2",
 						Table1Transformer,
 						[]elements.Column{
-							elements.NewColumn("column1", &arrow.Int32Type{}),
+							elements.NewColumn("column1", &arrow.StringType{}),
 							elements.NewColumn("column2", &arrow.BooleanType{}),
 							elements.NewColumn("column3", &arrow.Float64Type{}),
 							elements.NewColumn("eventName", &arrow.StringType{}),
@@ -57,15 +57,15 @@ func BuildTable1() *elements.Table {
 
 }
 
-func Table1Transformer(
+func Table2Transformer(
 	ctx context.Context,
 	mem *memory.GoAllocator,
 	logger *slog.Logger,
 	record arrow.Record,
 ) (arrow.Record, error) {
-	logger.Info("transforming table1 data")
+	logger.Info("transforming table2 data")
 	defer func() {
-		logger.Info("finished transformating table1 data")
+		logger.Info("finished transformating table2 data")
 	}()
 
 	// claim the record

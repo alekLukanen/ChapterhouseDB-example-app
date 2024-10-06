@@ -9,7 +9,7 @@ import (
 	"github.com/apache/arrow/go/v17/arrow/memory"
 )
 
-type RandomDataset struct {
+type RandomTable1Dataset struct {
 	idx                 int
 	iterationsCompleted int
 
@@ -21,8 +21,8 @@ type RandomDataset struct {
 	genNums map[int]struct{}
 }
 
-func NewRandomDataset(rowsPerRecord, maxIdValue, maxIterations int) *RandomDataset {
-	return &RandomDataset{
+func NewRandomTable1Dataset(rowsPerRecord, maxIdValue, maxIterations int) *RandomTable1Dataset {
+	return &RandomTable1Dataset{
 		idx:                 0,
 		iterationsCompleted: 0,
 		rowsPerRecord:       rowsPerRecord,
@@ -33,11 +33,11 @@ func NewRandomDataset(rowsPerRecord, maxIdValue, maxIterations int) *RandomDatas
 	}
 }
 
-func NewMediumRandomDataset() *RandomDataset {
-	return NewRandomDataset(1000, 100_000, 10)
+func NewMediumRandomTable1Dataset() *RandomTable1Dataset {
+	return NewRandomTable1Dataset(1000, 100_000, 10)
 }
 
-func (obj *RandomDataset) genRandNum(maxVal int) int {
+func (obj *RandomTable1Dataset) genRandNum(maxVal int) int {
 	for {
 		val := obj.randGen.IntN(maxVal)
 		if _, ok := obj.genNums[val]; !ok {
@@ -47,11 +47,11 @@ func (obj *RandomDataset) genRandNum(maxVal int) int {
 	}
 }
 
-func (obj *RandomDataset) Done() bool {
+func (obj *RandomTable1Dataset) Done() bool {
 	return obj.iterationsCompleted >= obj.maxIterations
 }
 
-func (obj *RandomDataset) BuildRecord(mem *memory.GoAllocator) arrow.Record {
+func (obj *RandomTable1Dataset) BuildRecord(mem *memory.GoAllocator) arrow.Record {
 
 	schema := arrow.NewSchema(
 		[]arrow.Field{
