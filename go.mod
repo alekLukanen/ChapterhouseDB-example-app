@@ -3,9 +3,9 @@ module github.com/alekLukanen/ChapterhouseDB-example-app
 go 1.23.0
 
 require (
-	github.com/alekLukanen/ChapterhouseDB v0.0.0-20240924012643-5479141990f0
+	github.com/alekLukanen/ChapterhouseDB v0.1.3
 	github.com/alekLukanen/arrow-ops v0.1.4
-	github.com/alekLukanen/errs v1.0.4
+	github.com/alekLukanen/errs v1.1.1
 	github.com/apache/arrow/go/v17 v17.0.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.56.1
 	github.com/jmoiron/sqlx v1.4.0
