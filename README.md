@@ -2,6 +2,21 @@
 
 A simple example app that demonstrates how to use ChapterhouseDB.
 
+## Setup
+
+In my case I have a cluster of two Raspberry PI computers with host names `pi0` and `pi1`.
+The deployments rely on having two nodes in your Kubernetes cluster. If you wish to change
+the preferred host names you can change the `preferredHostname` for each of the deployments
+in the `helm-deploy/chdb-ex/values.yaml` file. You will also need to change the container 
+registry in the `Tiltfile` file to match the container registry you are using. Change
+all occurrences of `pi0:30000` to your container registry.
+
+After making the necessary changes you can run
+```
+tilt up
+```
+This will deploy the example application to your Kubernetes cluster.
+
 ## View Images in Container Registry
 
 You can view the images in the given registry by using a url like this
