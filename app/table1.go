@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/alekLukanen/ChapterhouseDB/elements"
-	"github.com/alekLukanen/ChapterhouseDB/partitionFuncs"
+	"github.com/alekLukanen/ChapterhouseDB-v1/elements"
+	"github.com/alekLukanen/ChapterhouseDB-v1/partitionFuncs"
 	arrowops "github.com/alekLukanen/arrow-ops"
 	"github.com/alekLukanen/errs"
 	"github.com/apache/arrow/go/v17/arrow"

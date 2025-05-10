@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/alekLukanen/ChapterhouseDB/elements"
-	"github.com/alekLukanen/ChapterhouseDB/operations"
+	"github.com/alekLukanen/ChapterhouseDB-v1/elements"
+	"github.com/alekLukanen/ChapterhouseDB-v1/operations"
 )
 
 func BuildTableRegistry(ctx context.Context, logger *slog.Logger) (*operations.TableRegistry, error) {

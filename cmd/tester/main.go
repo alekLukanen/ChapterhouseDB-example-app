@@ -14,9 +14,9 @@ import (
 	_ "github.com/marcboeker/go-duckdb"
 
 	"github.com/alekLukanen/ChapterhouseDB-example-app/app"
-	"github.com/alekLukanen/ChapterhouseDB/operations"
-	"github.com/alekLukanen/ChapterhouseDB/storage"
-	"github.com/alekLukanen/ChapterhouseDB/tasker"
+	"github.com/alekLukanen/ChapterhouseDB-v1/operations"
+	"github.com/alekLukanen/ChapterhouseDB-v1/storage"
+	"github.com/alekLukanen/ChapterhouseDB-v1/tasker"
 	arrowops "github.com/alekLukanen/arrow-ops"
 	"github.com/alekLukanen/errs"
 )

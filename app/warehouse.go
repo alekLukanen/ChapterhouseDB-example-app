@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/alekLukanen/ChapterhouseDB/storage"
-	"github.com/alekLukanen/ChapterhouseDB/tasker"
-	"github.com/alekLukanen/ChapterhouseDB/warehouse"
+	"github.com/alekLukanen/ChapterhouseDB-v1/storage"
+	"github.com/alekLukanen/ChapterhouseDB-v1/tasker"
+	"github.com/alekLukanen/ChapterhouseDB-v1/warehouse"
 	"github.com/alekLukanen/errs"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
